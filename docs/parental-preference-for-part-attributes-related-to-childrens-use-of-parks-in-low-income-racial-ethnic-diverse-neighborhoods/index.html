@@ -523,9 +523,12 @@ var cryout_theme_settings = {"masonry":"1","rtl":"","magazine":"1","fitvids":"1"
 <script id="site-search-js">
 (function () {
   var base = "/paresearchcenter";
-  var searchPath = (base || "") + "/paresearchcenter/search/";
+  var searchPath = (base || "") + "/search/";
 
   function pageUrl(path) {
+    if (base && path.indexOf(base) === 0) {
+      return path;
+    }
     return (base || "") + path;
   }
 
@@ -560,7 +563,7 @@ var cryout_theme_settings = {"masonry":"1","rtl":"","magazine":"1","fitvids":"1"
   }
 
   resultsRoot.innerHTML = "<p>Searching…</p>";
-  fetch(pageUrl("/paresearchcenter/search-index.json"))
+  fetch(pageUrl("/search-index.json"))
     .then(function (response) {
       if (!response.ok) {
         throw new Error("Search index not found");
