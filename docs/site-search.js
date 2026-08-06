@@ -274,7 +274,8 @@
     return;
   }
 
-  var resultsRoot = document.getElementById("content-masonry");
+  var resultsRoot =
+    document.getElementById("content-masonry") || document.getElementById("site-search-results");
   var paginationRoot = document.getElementById("site-search-pagination");
   var heading = document.getElementById("site-search-heading");
   var breadcrumb = document.getElementById("site-search-breadcrumb");
