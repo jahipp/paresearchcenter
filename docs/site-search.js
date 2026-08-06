@@ -274,14 +274,14 @@
     return;
   }
 
-  var resultsRoot = document.getElementById("site-search-results");
+  var resultsRoot = document.getElementById("content-masonry");
   var paginationRoot = document.getElementById("site-search-pagination");
   var heading = document.getElementById("site-search-heading");
   var breadcrumb = document.getElementById("site-search-breadcrumb");
 
   if (query) {
     if (heading) {
-      heading.innerHTML = 'Search Results for: <strong>' + escapeHtml(query) + "</strong>";
+      heading.innerHTML = 'Search Results for: <span>' + escapeHtml(query) + "</span>";
     }
     if (breadcrumb) {
       breadcrumb.textContent = 'Search results for "' + query + '"';
