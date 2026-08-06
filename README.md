@@ -6,11 +6,9 @@ This project prepares the public site content on GitHub Pages ahead of a planned
 
 **Prepared:** August 2026
 
-- **Development / build pipeline:** branch `refactor/cleaningup-code`
-
 ## Static site notice
 
-This deployment is **read-only HTML**, not WordPress. Pages, images, and downloads from the export are kept so visitors can still browse the site after migration. Features that depended on WordPress or the old host **are not available**:
+This deployment is **read-only HTML**, not WordPress. Pages, images, and downloads from the export are kept so visitors can still browse the site after migration. Features that depended on WordPress or the previous host **are not available**:
 
 - **News and blog updates** — no new posts after export; existing articles remain as published.
 - **User registration and login** — accounts, admin login, and the dashboard are removed.
@@ -24,18 +22,6 @@ Layout and links are preserved where possible so the site stays usable as the pu
 
 Search uses a **client-side index** built from the static HTML pages. It replaces WordPress search in a simplified form and **results may differ** from what the WordPress site showed in ranking, wording, and which pages appear. Results are shown in a blog-style layout on the `/search/` page.
 
-## Repository layout
+## Development
 
-| Branch | Purpose |
-|--------|---------|
-| **`main`** | GitHub Pages deploy — `docs/` only |
-| **`refactor/cleaningup-code`** | Source export, build scripts, and maintenance tools |
-
-To update the published site, work on the development branch and publish:
-
-```powershell
-git checkout refactor/cleaningup-code
-python scripts/publish_to_main.py --push
-```
-
-See `MAINTENANCE.md` and `REFACTOR.md` on the development branch for build and maintenance details.
+Site updates are built on branch `refactor/cleaningup-code` (source export, build scripts, and maintenance tools). That branch publishes static files into `docs/` on `main`.
