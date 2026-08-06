@@ -95,8 +95,13 @@ def main() -> None:
                     main,
                     r'class="author vcard"[^>]*>.*?itemprop="name"[^>]*>([^<]+)<',
                 ),
+                "author_url": first_meta(
+                    main,
+                    r'class="author vcard"[^>]*>.*?rel="author"[^>]*href="([^"]+)"',
+                ),
                 "date": first_meta(main, r'<time class="published"[^>]*>\s*([^<]+?)\s*</time>'),
                 "category": first_meta(main, r'rel="category tag"[^>]*>([^<]+)<'),
+                "category_url": first_meta(main, r'rel="category tag"[^>]*href="([^"]+)"'),
                 "type": page_type(html),
             }
         )

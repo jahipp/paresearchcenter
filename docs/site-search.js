@@ -2,6 +2,7 @@
   var meta = document.querySelector('meta[name="site-base"]');
   var base = meta ? meta.getAttribute("content") || "" : "";
   var homePath = (base || "") + "/";
+  var searchPath = (base || "") + "/search/";
   var PER_PAGE = 10;
 
   function pageUrl(path) {
@@ -29,6 +30,18 @@
     var path = window.location.pathname.replace(/\/+$/, "") || "/";
     var home = (base || "").replace(/\/+$/, "") || "";
     return path === home || path === home + "/index.html" || (!base && path === "");
+  }
+
+  function isSearchPage() {
+    return /\/search\/?$/i.test(window.location.pathname);
+  }
+
+  function searchUrl(query, page) {
+    var url = searchPath + "?s=" + encodeURIComponent(query);
+    if (page && page > 1) {
+      url += "&paged=" + page;
+    }
+    return url;
   }
 
   function scoreEntry(entry, terms) {
@@ -96,6 +109,101 @@
     return snippet;
   }
 
+  function renderArticle(entry, terms) {
+    var url = pageUrl(entry.url);
+    var title = escapeHtml(entry.title);
+    var excerpt = escapeHtml(excerptAroundTerms(entry, terms));
+    var html = '<article class="hentry post type-post status-publish format-standard" itemprop="blogPost" itemscope="" itemtype="http://schema.org/BlogPosting">';
+    html += '<div class="article-inner">';
+    html += '<header class="entry-header">';
+    html += '<div class="entry-meta beforetitle-meta"></div>';
+    html += '<h2 class="entry-title" itemprop="headline"><a href="' + url + '" itemprop="mainEntityOfPage" rel="bookmark">' + title + "</a></h2>";
+    html += '<div class="entry-meta aftertitle-meta"></div>';
+    html += "</header>";
+    html += '<div class="entry-summary" itemprop="description"><p>' + excerpt + "</p></div>";
+    html += '<div class="entry-meta entry-utility">';
+
+    if (entry.author) {
+      html += '<span class="author vcard" itemprop="author" itemscope="" itemtype="http://schema.org/Person">';
+      html += '<i class="icon-author icon-metas" title="Author"></i> ';
+      if (entry.author_url) {
+        html +=
+          '<a class="url fn n" href="' +
+          pageUrl(entry.author_url) +
+          '" itemprop="url" rel="author" title="View all posts by ' +
+          escapeHtml(entry.author) +
+          '"><em itemprop="name">' +
+          escapeHtml(entry.author) +
+          "</em></a>";
+      } else {
+        html += "<em itemprop=\"name\">" + escapeHtml(entry.author) + "</em>";
+      }
+      html += "</span> ";
+    }
+
+    if (entry.date) {
+      html += '<span class="onDate date">';
+      html += '<i class="icon-date icon-metas" title="Date"></i> ';
+      html += '<time class="published" itemprop="datePublished">' + escapeHtml(entry.date) + "</time>";
+      html += "</span> ";
+    }
+
+    if (entry.category) {
+      html += '<span class="bl_categ">';
+      html += '<i class="icon-category icon-metas" title="Categories"></i> ';
+      if (entry.category_url) {
+        html +=
+          '<a href="' +
+          pageUrl(entry.category_url) +
+          '" rel="category tag">' +
+          escapeHtml(entry.category) +
+          "</a>";
+      } else {
+        html += escapeHtml(entry.category);
+      }
+      html += "</span>";
+    }
+
+    html += "</div>";
+    html +=
+      '<footer class="post-continue-container"><a class="continue-reading-link" href="' +
+      url +
+      '"><span>Continue reading</span><em class="screen-reader-text">"' +
+      title +
+      '"</em><i class="icon-continue-reading"></i></a></footer>';
+    html += '<link href="' + url + '" itemprop="mainEntityOfPage"/>';
+    html += "</div></article>";
+    return html;
+  }
+
+  function renderPagination(query, page, totalPages) {
+    if (totalPages <= 1) {
+      return "";
+    }
+    var html = '<nav aria-label="Posts pagination" class="navigation pagination"><h2 class="screen-reader-text">Posts pagination</h2><div class="nav-links">';
+    if (page > 1) {
+      html +=
+        '<a class="prev page-numbers" href="' +
+        searchUrl(query, page - 1) +
+        '"><i class="icon-pagination-left"></i></a>';
+    }
+    for (var p = 1; p <= totalPages; p++) {
+      if (p === page) {
+        html += '<span aria-current="page" class="page-numbers current">' + p + "</span>";
+      } else {
+        html += '<a class="page-numbers" href="' + searchUrl(query, p) + '">' + p + "</a>";
+      }
+    }
+    if (page < totalPages) {
+      html +=
+        '<a class="next page-numbers" href="' +
+        searchUrl(query, page + 1) +
+        '"><i class="icon-pagination-right"></i></a>';
+    }
+    html += "</div></nav>";
+    return html;
+  }
+
   function renderResults(entries, query, page) {
     var terms = query.toLowerCase().split(/\s+/).filter(Boolean);
     var matches = entries
@@ -118,57 +226,24 @@
     var html = "";
 
     if (!pageItems.length) {
-      return '<p class="site-search-empty">No results for <strong>' + escapeHtml(query) + "</strong>.</p>";
+      return {
+        articles: '<p>No results for <strong>' + escapeHtml(query) + "</strong>.</p>",
+        pagination: "",
+      };
     }
 
     pageItems.forEach(function (item) {
-      var entry = item.entry;
-      html += '<article class="site-search-result hentry">';
-      html += '<h2 class="entry-title"><a href="' + pageUrl(entry.url) + '">' + escapeHtml(entry.title) + "</a></h2>";
-      html += "<p>" + escapeHtml(excerptAroundTerms(entry, terms)) + "</p>";
-      if (entry.author || entry.date || entry.category) {
-        html += '<div class="entry-meta entry-utility site-search-meta">';
-        if (entry.author) {
-          html += "<span>" + escapeHtml(entry.author) + "</span> ";
-        }
-        if (entry.date) {
-          html += "<span>" + escapeHtml(entry.date) + "</span> ";
-        }
-        if (entry.category) {
-          html += "<span>" + escapeHtml(entry.category) + "</span>";
-        }
-        html += "</div>";
-      }
-      html += "</article>";
+      html += renderArticle(item.entry, terms);
     });
 
-    var totalPages = Math.ceil(total / PER_PAGE);
-    if (totalPages > 1) {
-      html += '<nav class="navigation pagination site-search-pagination" aria-label="Search results pages"><div class="nav-links">';
-      for (var p = 1; p <= totalPages; p++) {
-        if (p === page) {
-          html += '<span aria-current="page" class="page-numbers current">' + p + "</span>";
-        } else {
-          html +=
-            '<a class="page-numbers" href="' +
-            homePath +
-            "?s=" +
-            encodeURIComponent(query) +
-            "&paged=" +
-            p +
-            '">' +
-            p +
-            "</a>";
-        }
-      }
-      html += "</div></nav>";
-    }
-
-    return html;
+    return {
+      articles: html,
+      pagination: renderPagination(query, page, Math.ceil(total / PER_PAGE)),
+    };
   }
 
   document.querySelectorAll("form.searchform").forEach(function (form) {
-    form.setAttribute("action", homePath);
+    form.setAttribute("action", searchPath);
     form.setAttribute("method", "get");
     form.setAttribute("role", "search");
 
@@ -185,49 +260,47 @@
         return;
       }
       event.preventDefault();
-      window.location.href = homePath + "?s=" + encodeURIComponent(query);
+      window.location.href = searchUrl(query);
     });
   });
 
   var query = readQuery();
-  if (!query) {
+  if (isHomePage() && query) {
+    window.location.replace(searchUrl(query, readPage()));
     return;
   }
 
-  if (!isHomePage() && /\/search\/?$/i.test(window.location.pathname)) {
-    window.location.replace(homePath + "?s=" + encodeURIComponent(query));
+  if (!isSearchPage()) {
     return;
   }
 
-  if (!isHomePage()) {
-    return;
-  }
-
-  var homeContent = document.getElementById("site-home-content");
-  var searchView = document.getElementById("site-search-view");
   var resultsRoot = document.getElementById("site-search-results");
-  var queryLabel = document.getElementById("site-search-query-label");
+  var paginationRoot = document.getElementById("site-search-pagination");
+  var heading = document.getElementById("site-search-heading");
+  var breadcrumb = document.getElementById("site-search-breadcrumb");
 
-  if (homeContent) {
-    homeContent.style.display = "none";
+  if (query) {
+    if (heading) {
+      heading.innerHTML = 'Search Results for: <strong>' + escapeHtml(query) + "</strong>";
+    }
+    if (breadcrumb) {
+      breadcrumb.textContent = 'Search results for "' + query + '"';
+    }
+    document.title = 'Search Results for "' + query + '" – Physical Activity Research Center';
+    document.querySelectorAll('form.searchform input[name="s"], form.searchform input[type="search"]').forEach(function (input) {
+      input.value = query;
+    });
   }
-  if (searchView) {
-    searchView.style.display = "block";
-  }
-  if (queryLabel) {
-    queryLabel.textContent = query;
-  }
-  document.title = 'Search Results for "' + query + '" – Physical Activity Research Center';
 
-  document.querySelectorAll('form.searchform input[name="s"], form.searchform input[type="search"]').forEach(function (input) {
-    input.value = query;
-  });
-
-  if (!resultsRoot) {
+  if (!query || !resultsRoot) {
     return;
   }
 
   resultsRoot.innerHTML = "<p>Searching…</p>";
+  if (paginationRoot) {
+    paginationRoot.innerHTML = "";
+  }
+
   fetch(pageUrl("/search-index.json"))
     .then(function (response) {
       if (!response.ok) {
@@ -239,7 +312,11 @@
       if (!Array.isArray(entries)) {
         throw new Error("Invalid search index");
       }
-      resultsRoot.innerHTML = renderResults(entries, query, readPage());
+      var rendered = renderResults(entries, query, readPage());
+      resultsRoot.innerHTML = rendered.articles;
+      if (paginationRoot) {
+        paginationRoot.innerHTML = rendered.pagination;
+      }
     })
     .catch(function () {
       resultsRoot.innerHTML = "<p>Search is temporarily unavailable.</p>";
