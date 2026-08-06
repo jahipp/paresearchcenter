@@ -535,10 +535,15 @@ var cryout_theme_settings = {"masonry":"1","rtl":"","magazine":"1","fitvids":"1"
     })
     .then(function (entries) {
       var terms = query.toLowerCase().split(/\s+/).filter(Boolean);
+      if (!terms.length) {
+        resultsRoot.innerHTML = "<p>Enter a search term above.</p>";
+        return;
+      }
       var matches = entries.filter(function (entry) {
-        var haystack = (entry.title + " " + entry.text).toLowerCase();
+        var title = (entry.title || "").toLowerCase();
+        var text = (entry.text || "").toLowerCase();
         return terms.every(function (term) {
-          return haystack.indexOf(term) !== -1;
+          return title.indexOf(term) !== -1 || text.indexOf(term) !== -1;
         });
       });
 
